@@ -5,7 +5,7 @@ CPPFLAGS += -I. -I./tests
 
 CFLAGS += -Wall -Wextra -Werror -fPIC -g
 
-all: lib test
+all: lib run_test
 
 lib: libstpparser.a
 
@@ -15,8 +15,11 @@ libstpparser.a: stpparser.o
 stpparser.o: stpparser.c stpparser.h Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c stpparser.c
 
-test: stpparser.c stpparser.h tests/test.c Makefile tests/test_*.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o test stpparser.c tests/test.c
+run_test: stpparser.c stpparser.h tests/test.c Makefile tests/test_*.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o run_test stpparser.c tests/test.c
+
+test: run_test
+	./run_test
 
 distclean: clean
 

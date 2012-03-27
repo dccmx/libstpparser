@@ -18,13 +18,14 @@ void stpparser_init(stpparser *parser) {
   memset(parser, 0, sizeof(*parser));
   parser->data = data;
   parser->state = StateInit;
+  parser->last_state = StateNone;
 }
 
 #define RET return p - data
 
 size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, size_t len) {
   const char *p = data, *at = data;
-  enum States last_state, uncommit_state = StateNone;
+  enum States uncommit_state = StateNone;
 
   while (p < data + len) {
     switch (parser->state) {
@@ -34,12 +35,12 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
         parser->state = StateReadLen;
         parser->arglen = 0;
         at = p;
-        last_state = StateInit;
+        parser->last_state = StateInit;
         break;
 
       case StateReadLen:
         if (isdigit(*p)) {
-          if (last_state != StateReadLen && settings->on_argument_len_begin && settings->on_argument_len_begin(parser)) RET;
+          if (parser->last_state != StateReadLen && settings->on_argument_len_begin && settings->on_argument_len_begin(parser)) RET;
           parser->arglen = parser->arglen * 10 + (*p - '0');
           p++;
           uncommit_state = StateReadLen;
@@ -53,7 +54,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           parser->state = StateReadLenEOL;
           p++;
         }
-        last_state = StateInit;
+        parser->last_state = StateInit;
         break;
 
       case StateReadLenEOL:
@@ -64,11 +65,11 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           p++;
           at = p;
         }
-        last_state = StateReadLenEOL;
+        parser->last_state = StateReadLenEOL;
         break;
 
       case StateReadArg:
-        if (last_state != StateReadArg && settings->on_argument_begin && settings->on_argument_begin(parser)) RET;
+        if (parser->last_state != StateReadArg && settings->on_argument_begin && settings->on_argument_begin(parser)) RET;
         if (parser->arglen > 0) {
           parser->arglen--;
           p++;
@@ -85,7 +86,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           p++;
           at = p;
         }
-        last_state = StateReadArg;
+        parser->last_state = StateReadArg;
         break;
 
       case StateReadArgEOL:
@@ -96,7 +97,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           p++;
           at = p;
         }
-        last_state = StateReadArgEOL;
+        parser->last_state = StateReadArgEOL;
         break;
 
       case StateReadMsgCL:
@@ -107,7 +108,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           parser->state = StateReadMsgRF;
           p++;
         }
-        last_state = StateReadMsgCL;
+        parser->last_state = StateReadMsgCL;
         break;
 
       case StateReadMsgRF:
@@ -117,7 +118,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           parser->state = StateInit;
           p++;
         }
-        last_state = StateReadMsgRF;
+        parser->last_state = StateReadMsgRF;
         break;
     }
   }

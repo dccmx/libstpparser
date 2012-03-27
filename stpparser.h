@@ -16,6 +16,7 @@ typedef int (*callback) (stpparser* parser);
 
 struct stpparser {
   char state;
+  char last_state;
   size_t arglen;
   void *data;
 };
