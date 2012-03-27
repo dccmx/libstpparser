@@ -10,9 +10,9 @@ extern "C" {
 typedef struct stpparser stpparser;
 typedef struct stpparser_settings stpparser_settings;
 
-typedef int (*stp_data_cb) (stpparser* parser, const char *at, size_t length);
-typedef int (*stp_arglen_cb) (stpparser* parser, size_t length);
-typedef int (*stp_cb) (stpparser* parser);
+typedef int (*data_callback) (stpparser* parser, const char *at, size_t length);
+typedef int (*size_callback) (stpparser* parser, size_t length);
+typedef int (*callback) (stpparser* parser);
 
 struct stpparser {
   char state;
@@ -21,12 +21,18 @@ struct stpparser {
 };
 
 struct stpparser_settings {
-  stp_cb      on_message_begin;
-  stp_data_cb on_argument_len_data;
-  stp_arglen_cb on_argument_len;
-  stp_data_cb on_argument;
-  stp_cb on_argument_complete;
-  stp_cb      on_message_complete;
+  callback        on_message_begin;
+
+  callback        on_argument_len_begin;
+  data_callback   on_argument_len_data;
+  callback        on_argument_len_complete;
+  size_callback   on_argument_len;
+
+  callback        on_argument_begin;
+  data_callback   on_argument_data;
+  callback        on_argument_complete;
+
+  callback        on_message_complete;
 };
 
 void stpparser_init(stpparser *parser);

@@ -1,18 +1,24 @@
 CC?=gcc
 AR?=ar
 
-CPPFLAGS += -I.
+CPPFLAGS += -I. -I./tests
 
 CFLAGS += -Wall -Wextra -Werror -fPIC -g
 
-lib: stpparser.o
+all: lib test
+
+lib: libstpparser.a
+
+libstpparser.a: stpparser.o
 	$(AR) rcs libstpparser.a stpparser.o
 
-stp_parser.o: stpparser.c stpparser.h Makefile
+stpparser.o: stpparser.c stpparser.h Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c stpparser.c
 
-test: stpparser.c stpparser.h test.c Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o test stpparser.c test.c
+test: stpparser.c stpparser.h tests/test.c Makefile tests/test_*.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o test stpparser.c tests/test.c
+
+distclean: clean
 
 clean:
-	rm -f *.o *.a test
+	rm -rf *.o *.a test *.dSYM

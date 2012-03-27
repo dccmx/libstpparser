@@ -1,0 +1,4 @@
+libstpparser.a
+stpparser.o
+test
+test.dSYM
