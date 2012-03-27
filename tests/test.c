@@ -39,6 +39,7 @@ const struct message messages[] = {
 #include "test_2.c"
 #include "test_3.c"
 #include "test_4.c"
+#include "test_5.c"
   { .name = NULL, },
 };
 
@@ -215,11 +216,11 @@ int test(const struct message *msg) {
   }
 
   if (verify(&res, msg)) {
-    printf("[FAILED]\n\n");
+    printf("[FAILED]\n");
     return 0;
   }
 
-  printf("[OK]\n\n");
+  printf("[OK]\n");
   return 1;
 }
 

@@ -23,7 +23,7 @@ void stpparser_init(stpparser *parser) {
 #define RET return p - data
 
 size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, size_t len) {
-  const char *p = data, *at;
+  const char *p = data, *at = data;
   enum States last_state, uncommit_state = StateNone;
 
   while (p < data + len) {
@@ -46,7 +46,7 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
         } else if (*p != '\r') { // error
           RET;
         } else {
-          if (settings->on_argument_len_data && settings->on_argument_len_data(parser, at, p - at - 2)) RET;
+          if (settings->on_argument_len_data && settings->on_argument_len_data(parser, at, p - at)) RET;
           if (settings->on_argument_len_complete && settings->on_argument_len_complete(parser)) RET;
           if (settings->on_argument_len && settings->on_argument_len(parser, parser->arglen)) RET;
           uncommit_state = StateNone;
