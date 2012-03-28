@@ -7,18 +7,25 @@ extern "C" {
 #include <sys/types.h>
 #include <stdint.h>
 
+#define STOK 0
+#define STBIGLEN 1
+#define STBADLEN 2
+#define STNOTR 3
+#define STNOTN 4
+
 typedef struct stpparser stpparser;
 typedef struct stpparser_settings stpparser_settings;
 
-typedef int (*data_callback) (stpparser* parser, const char *at, size_t length);
-typedef int (*size_callback) (stpparser* parser, size_t length);
+typedef int (*data_callback) (stpparser* parser, const char *at, int length);
+typedef int (*size_callback) (stpparser* parser, int length);
 typedef int (*callback) (stpparser* parser);
 
 struct stpparser {
   char state;
   char last_state;
-  size_t arglen;
+  int arglen;
   void *data;
+  int errnum;
 };
 
 struct stpparser_settings {
@@ -38,7 +45,9 @@ struct stpparser_settings {
 
 void stpparser_init(stpparser *parser);
 
-size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, size_t len);
+int stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, int len);
+
+const char *stpparser_strerror(int errnum);
 
 #ifdef __cplusplus
 }

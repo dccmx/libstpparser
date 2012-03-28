@@ -1,4 +1,4 @@
 libstpparser.a
 stpparser.o
 run_test
-test.dSYM
+*.dSYM

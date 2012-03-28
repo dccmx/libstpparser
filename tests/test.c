@@ -20,6 +20,8 @@ struct message {
   char argv[MAX_NARG][MAX_ARG];
   const size_t arglen[MAX_NARG];
 
+  int errnum;
+
   int cnt_message_begin;
 
   int cnt_argument_len_begin;
@@ -39,7 +41,12 @@ const struct message messages[] = {
 #include "test_2.c"
 #include "test_3.c"
 #include "test_4.c"
-#include "test_5.c"
+#include "test_invalidlen.c"
+#include "test_invalidlen2.c"
+#include "test_emptylen.c"
+#include "test_biglen.c"
+#include "test_notr1.c"
+#include "test_notr2.c"
   { .name = NULL, },
 };
 
@@ -47,6 +54,8 @@ struct result {
   int argc;
   char argv[MAX_NARG][MAX_ARG];
   size_t arglen[MAX_NARG];
+  int errnum;
+
   int cnt_message_begin;
 
   int cnt_argument_len_begin;
@@ -75,7 +84,7 @@ int argument_len_begin(stpparser* parser) {
   return 0;
 }
 
-int argument_len_data(stpparser* parser, const char *at, size_t length) {
+int argument_len_data(stpparser* parser, const char *at, int length) {
   struct result *res = (struct result*)parser->data;
   at = at;
   length = length;
@@ -89,7 +98,7 @@ int argument_len_complete(stpparser* parser) {
   return 0;
 }
 
-int argument_len(stpparser* parser, size_t length) {
+int argument_len(stpparser* parser, int length) {
   struct result *res = (struct result*)parser->data;
   res->cnt_argument_len++;
   res->arglen[res->argc] = length;
@@ -102,7 +111,7 @@ int argument_begin(stpparser* parser) {
   return 0;
 }
 
-int argument_data(stpparser* parser, const char *at, size_t length) {
+int argument_data(stpparser* parser, const char *at, int length) {
   struct result *res = (struct result*)parser->data;
   res->cnt_argument_data++;
   memcpy(res->argv[res->argc] + res->pos, at, length);
@@ -168,6 +177,13 @@ int verify(struct result *res, const struct message *msg) {
     printf("\nexpected %d args but got %d\n", msg->argc, res->argc);
     return 1;
   }
+
+  // verify errnum
+  if (res->errnum != msg->errnum) {
+      printf("\nexpected errnum %d but got %d\n", msg->errnum, res->errnum);
+      return 1;
+  }
+
   // verify argv
   for (i = 0; i < res->argc; i++) {
     if (res->arglen[i] != msg->arglen[i]) {
@@ -209,10 +225,11 @@ int test(const struct message *msg) {
   
   for (i = 0; msg->parts[i].data != NULL; i++) {
     size_t plen = stpparser_execute(&parser, &settings, msg->parts[i].data, strlen(msg->parts[i].data));
-    if ( plen != msg->parts[i].parse_len) {
-      printf("invalid at %zu:%s[FAILED]\n\n", plen, msg->parts[i].data);
+    if (plen != msg->parts[i].parse_len && msg->errnum == 0) {
+      printf("invalid at pos %zu of msg \"%s\" [FAILED]\n\n", plen, msg->parts[i].data);
       return 0;
     }
+    res.errnum = parser.errnum;
   }
 
   if (verify(&res, msg)) {

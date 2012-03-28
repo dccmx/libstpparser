@@ -1,5 +1,6 @@
 #include "stpparser.h"
 #include <string.h>
+#include <stdio.h>
 #include <ctype.h>
 
 enum States {
@@ -23,9 +24,10 @@ void stpparser_init(stpparser *parser) {
 
 #define RET return p - data
 
-size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, size_t len) {
+int stpparser_execute(stpparser *parser, const stpparser_settings *settings, const char *data, int len) {
   const char *p = data, *at = data;
   enum States uncommit_state = StateNone;
+  parser->errnum = 0;
 
   while (p < data + len) {
     switch (parser->state) {
@@ -42,9 +44,17 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
         if (isdigit(*p)) {
           if (parser->last_state != StateReadLen && settings->on_argument_len_begin && settings->on_argument_len_begin(parser)) RET;
           parser->arglen = parser->arglen * 10 + (*p - '0');
+          if (parser->arglen < 0) {
+            parser->errnum = STBIGLEN;  // length too big
+            RET;
+          }
           p++;
           uncommit_state = StateReadLen;
-        } else if (*p != '\r') { // error
+        } else if (parser->last_state != StateReadLen) {
+          parser->errnum = STBADLEN;  // invalid length
+          RET;
+        } else if (*p != '\r') {
+          parser->errnum = STNOTR;  // expected \r after field
           RET;
         } else {
           if (settings->on_argument_len_data && settings->on_argument_len_data(parser, at, p - at)) RET;
@@ -54,11 +64,12 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
           parser->state = StateReadLenEOL;
           p++;
         }
-        parser->last_state = StateInit;
+        parser->last_state = StateReadLen;
         break;
 
       case StateReadLenEOL:
-        if (*p != '\n') { // error
+        if (*p != '\n') {
+          parser->errnum = STNOTN;  // expected \n after \r
           RET;
         } else {
           parser->state = StateReadArg;
@@ -79,7 +90,8 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
             if (settings->on_argument_complete && settings->on_argument_complete(parser)) RET;
             uncommit_state = StateNone;
           }
-        } else if (*p != '\r') { // error
+        } else if (*p != '\r') {
+          parser->errnum = STNOTR;
           RET;
         } else {
           parser->state = StateReadArgEOL;
@@ -90,7 +102,8 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
         break;
 
       case StateReadArgEOL:
-        if (*p != '\n') { // error
+        if (*p != '\n') {
+          parser->errnum = STNOTN;
           RET;
         } else {
           parser->state = StateReadMsgCL;
@@ -112,7 +125,8 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
         break;
 
       case StateReadMsgRF:
-        if (*p != '\n') { // error
+        if (*p != '\n') {
+          parser->errnum = STNOTN;
           RET;
         } else {
           parser->state = StateInit;
@@ -135,4 +149,23 @@ size_t stpparser_execute(stpparser *parser, const stpparser_settings *settings, 
   }
 
   RET;
+}
+
+static const char *errlist[] = {
+  "ok",
+  "length too big",
+  "invalid length",
+  "expect \\r after field",
+  "expect \\n after \\r",
+};
+
+static int nerr = sizeof(errlist) / sizeof(char*);
+
+const char *stpparser_strerror(int errnum) {
+  static char buf[32];
+  if (errnum < 0 || errnum >= nerr) {
+    sprintf(buf, "unknown error: %d", errnum);
+    return buf;
+  }
+  return errlist[errnum];
 }

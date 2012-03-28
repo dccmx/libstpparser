@@ -23,6 +23,7 @@
     5,
     1,
   },
+  .errnum = STOK,
   .cnt_message_begin = 2,
 
   .cnt_argument_len_begin = 4,
