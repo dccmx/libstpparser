@@ -37,6 +37,7 @@ struct message {
 };
 
 const struct message messages[] = {
+#include "test_0.c"
 #include "test_1.c"
 #include "test_2.c"
 #include "test_3.c"

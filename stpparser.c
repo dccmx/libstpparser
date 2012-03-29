@@ -90,6 +90,10 @@ int stpparser_execute(stpparser *parser, const stpparser_settings *settings, con
             if (settings->on_argument_complete && settings->on_argument_complete(parser)) RET;
             uncommit_state = StateNone;
           }
+        } else if (parser->last_state == StateReadLenEOL) {  // 0 length arg
+          if (settings->on_argument_data && settings->on_argument_data(parser, at, p - at)) RET;
+          if (settings->on_argument_complete && settings->on_argument_complete(parser)) RET;
+          uncommit_state = StateNone;
         } else if (*p != '\r') {
           parser->errnum = STNOTR;
           RET;
