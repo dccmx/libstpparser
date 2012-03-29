@@ -44,7 +44,7 @@ const struct message messages[] = {
 #include "test_4.c"
 #include "test_invalidlen.c"
 #include "test_invalidlen2.c"
-#include "test_emptylen.c"
+#include "test_noarg.c"
 #include "test_biglen.c"
 #include "test_notr1.c"
 #include "test_notr2.c"

@@ -1,5 +1,5 @@
 {
-  .name = "empty length",
+  .name = "no arg",
   .parts = 
   {
     {
@@ -15,7 +15,7 @@
   .arglen = 
   {
   },
-  .errnum = STBADLEN,
+  .errnum = STOK,
   .cnt_message_begin = 1,
 
   .cnt_argument_len_begin = 0,
@@ -27,5 +27,5 @@
   .cnt_argument_data = 0,
   .cnt_argument_complete = 0,
 
-  .cnt_message_complete = 0,
+  .cnt_message_complete = 1,
 },

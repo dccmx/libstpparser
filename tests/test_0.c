@@ -31,4 +31,3 @@
 
   .cnt_message_complete = 1,
 },
-

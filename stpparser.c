@@ -50,6 +50,8 @@ int stpparser_execute(stpparser *parser, const stpparser_settings *settings, con
           }
           p++;
           uncommit_state = StateReadLen;
+        } else if (parser->last_state == StateInit) {  // no args
+          parser->state = StateReadMsgCL;
         } else if (parser->last_state != StateReadLen) {
           parser->errnum = STBADLEN;  // invalid length
           RET;
