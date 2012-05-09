@@ -9,6 +9,10 @@ all: lib run_test
 
 lib: libstpparser.a
 
+install: libstpparser.a
+	cp libstpparser.a /usr/local/lib
+	cp stpparser.h /usr/local/include
+
 libstpparser.a: stpparser.o
 	$(AR) rcs libstpparser.a stpparser.o
 

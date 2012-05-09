@@ -87,8 +87,8 @@ int argument_len_begin(stpparser* parser) {
 
 int argument_len_data(stpparser* parser, const char *at, int length) {
   struct result *res = (struct result*)parser->data;
-  at = at;
-  length = length;
+  (void)at;
+  (void)length;
   res->cnt_argument_len_data++;
   return 0;
 }
